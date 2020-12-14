@@ -4,6 +4,7 @@ import bio.ferlab.clin.dao.DaoConfiguration;
 import bio.ferlab.clin.es.config.ElasticsearchConfiguration;
 import bio.ferlab.clin.es.config.PatientDataConfiguration;
 import bio.ferlab.clin.es.data.builder.PatientDataBuilder;
+import bio.ferlab.clin.interceptors.AuditTrailService;
 import bio.ferlab.clin.utils.JsonGenerator;
 import bio.ferlab.clin.validation.ValidationConfiguration;
 import ca.uhn.fhir.context.FhirVersionEnum;
@@ -46,6 +47,7 @@ public class ApplicationContext extends AnnotationConfigWebApplicationContext {
     register(DaoConfiguration.class);
     register(PatientDataConfiguration.class);
     register(PatientDataBuilder.class);
+    register(AuditTrailService.class);
     register(JsonGenerator.class);
   }
 

@@ -28,6 +28,7 @@ import ca.uhn.fhir.narrative.DefaultThymeleafNarrativeGenerator;
 import ca.uhn.fhir.rest.server.HardcodedServerAddressStrategy;
 import ca.uhn.fhir.rest.server.RestfulServer;
 import ca.uhn.fhir.rest.server.interceptor.*;
+import ca.uhn.fhir.rest.server.interceptor.consent.ConsentInterceptor;
 import ca.uhn.fhir.rest.server.interceptor.partition.RequestTenantPartitionInterceptor;
 import ca.uhn.fhir.rest.server.tenant.UrlBaseTenantIdentificationStrategy;
 import ca.uhn.fhir.validation.IValidatorModule;
@@ -331,6 +332,7 @@ public class BaseJpaRestfulServer extends RestfulServer {
         // CLIN
         registerInterceptor(new FieldValidatorInterceptor(appCtx));
         registerInterceptor(new ValidationInterceptor());
+        registerInterceptor(new ConsentInterceptor(new ConsentInterceptorService(appCtx)));
         if(HapiProperties.isBioEsEnabled()) {
             registerInterceptor(new IndexerInterceptor(appCtx));
         }
