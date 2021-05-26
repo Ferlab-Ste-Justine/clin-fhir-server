@@ -3,6 +3,7 @@ package bio.ferlab.clin.interceptors;
 import ca.uhn.fhir.interceptor.api.Hook;
 import ca.uhn.fhir.interceptor.api.Pointcut;
 import ca.uhn.fhir.jpa.validation.JpaValidationSupportChain;
+import ca.uhn.fhir.rest.api.RestOperationTypeEnum;
 import ca.uhn.fhir.rest.api.server.RequestDetails;
 import ca.uhn.fhir.rest.server.interceptor.RequestValidatingInterceptor;
 import ca.uhn.fhir.rest.server.exceptions.AuthenticationException;
@@ -20,14 +21,18 @@ public class ValidationInterceptor extends RequestValidatingInterceptor {
     @Hook(value = Pointcut.SERVER_INCOMING_REQUEST_POST_PROCESSED)
     @Override
     public boolean incomingRequestPostProcessed(RequestDetails requestDetails, HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
-        ApplicationContext appCtx = (ApplicationContext) request.getServletContext()
-                .getAttribute("org.springframework.web.context.WebApplicationContext.ROOT");
-        JpaValidationSupportChain chain = appCtx.getBean(JpaValidationSupportChain.class);
-        FhirInstanceValidator module = new FhirInstanceValidator(chain);
-        module.setAnyExtensionsAllowed(false);
-        module.setErrorForUnknownProfiles(true);
-        module.setNoTerminologyChecks(true);
-        setValidatorModules(Collections.singletonList(module));
-        return super.incomingRequestPostProcessed(requestDetails, request, response);
+        if (requestDetails.getRestOperationType().equals(RestOperationTypeEnum.GRAPHQL_REQUEST)) {
+            return true;
+        } else {
+            ApplicationContext appCtx = (ApplicationContext) request.getServletContext()
+                    .getAttribute("org.springframework.web.context.WebApplicationContext.ROOT");
+            JpaValidationSupportChain chain = appCtx.getBean(JpaValidationSupportChain.class);
+            FhirInstanceValidator module = new FhirInstanceValidator(chain);
+            module.setAnyExtensionsAllowed(false);
+            module.setErrorForUnknownProfiles(true);
+            module.setNoTerminologyChecks(true);
+            setValidatorModules(Collections.singletonList(module));
+            return super.incomingRequestPostProcessed(requestDetails, request, response);
+        }
     }
 }
