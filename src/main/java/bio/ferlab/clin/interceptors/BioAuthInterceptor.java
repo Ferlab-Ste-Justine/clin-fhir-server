@@ -3,6 +3,7 @@ package bio.ferlab.clin.interceptors;
 import bio.ferlab.clin.auth.RPTPermissionExtractor;
 import bio.ferlab.clin.auth.data.Permission;
 import bio.ferlab.clin.auth.data.UserPermissions;
+import bio.ferlab.clin.utils.Constants;
 import ca.uhn.fhir.rest.api.server.RequestDetails;
 import ca.uhn.fhir.rest.server.interceptor.auth.AuthorizationInterceptor;
 import ca.uhn.fhir.rest.server.interceptor.auth.IAuthRule;
@@ -72,12 +73,17 @@ public class BioAuthInterceptor extends AuthorizationInterceptor {
         ruleBuilder.allow().graphQL().any().andThen();
     }
 
+    private void applyRulesOnValidate(IAuthRuleBuilder ruleBuilder) {
+        ruleBuilder.allow().operation().named(Constants.VALIDATE_OPERATION).onAnyType().andRequireExplicitResponseAuthorization().andThen();
+    }
+
     @Override
     public List<IAuthRule> buildRuleList(RequestDetails requestDetails) {
         final var permissions = this.permissionExtractor.extract(requestDetails);
         final var ruleBuilder = this.handleUserPermissions(permissions);
         this.applyRulesOnTransactions(ruleBuilder);
         this.applyRulesOnGraphql(ruleBuilder);
+        this.applyRulesOnValidate(ruleBuilder);
         return ruleBuilder.denyAll().build();
     }
 }

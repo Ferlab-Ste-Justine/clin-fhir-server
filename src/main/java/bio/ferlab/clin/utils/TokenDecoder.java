@@ -23,10 +23,11 @@ import java.net.URL;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Locale;
 
+import static bio.ferlab.clin.utils.Helpers.FORBIDDEN;
+
 @Component
 public class TokenDecoder {
     private static final Logger logger = LoggerFactory.getLogger(TokenDecoder.class);
-    private static final String FORBIDDEN = "FORBIDDEN";
     private final JwkProvider provider;
 
     public TokenDecoder(BioProperties bioProperties) throws MalformedURLException {
@@ -39,16 +40,9 @@ public class TokenDecoder {
         return provider;
     }
 
-    public RequesterData decode(String bearer, Locale locale) throws AuthenticationException {
-        String accessToken = null;
-        if (StringUtils.isNotBlank(bearer)) {
-            accessToken = bearer.split(" ")[1];
-        }
-        if (accessToken == null) {
-            logger.info("No access token provided in header");
-            throw new AuthenticationException(FORBIDDEN);
-        }
+    public RequesterData decode(String authorization, Locale locale) throws AuthenticationException {
         try {
+            final var accessToken = Helpers.extractAccessTokenFromBearer(authorization);
             final DecodedJWT decodedJWT = JWT.decode(accessToken);
             ServiceContext.build(decodedJWT.getSubject(), locale);
 
@@ -64,4 +58,5 @@ public class TokenDecoder {
             throw new AuthenticationException(FORBIDDEN, e);
         }
     }
+
 }

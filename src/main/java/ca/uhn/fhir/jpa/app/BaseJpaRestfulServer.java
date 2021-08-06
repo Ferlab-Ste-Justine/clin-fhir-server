@@ -1,8 +1,7 @@
 package ca.uhn.fhir.jpa.app;
 
-import bio.ferlab.clin.properties.BioProperties;
 import bio.ferlab.clin.interceptors.*;
-import bio.ferlab.clin.utils.Constants;
+import bio.ferlab.clin.properties.BioProperties;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.context.FhirVersionEnum;
 import ca.uhn.fhir.cql.common.provider.CqlProviderLoader;
@@ -292,7 +291,6 @@ public class BaseJpaRestfulServer extends RestfulServer {
             config.addAllowedHeader("x-fhir-starter");
             config.addAllowedHeader("X-Requested-With");
             config.addAllowedHeader("Prefer");
-            config.addAllowedHeader(Constants.RPT_HEADER);
             List<String> allAllowedCORSOrigins = appProperties.getCors().getAllowed_origin();
             allAllowedCORSOrigins.forEach(config::addAllowedOrigin);
 
@@ -400,17 +398,23 @@ public class BaseJpaRestfulServer extends RestfulServer {
         daoConfig.getModelConfig().setNormalizedQuantitySearchLevel(appProperties.getNormalized_quantity_search_level());
 
         // CLIN
+        daoConfig.setEnforceReferentialIntegrityOnWrite(false);
+        registerInterceptor(new LogInterceptor());
         registerInterceptor(fieldValidatorInterceptor);
         registerInterceptor(new ValidationInterceptor());
+
         if (bioProperties.isAuthorizationEnabled()) {
             registerInterceptor(bioAuthInterceptor);
         }
+
         if (bioProperties.isBioEsEnabled()) {
             registerInterceptor(indexerInterceptor);
         }
+
         if (bioProperties.isAuthEnabled()) {
             registerInterceptor(accessTokenInterceptor);
         }
+
         registerInterceptor(new ServiceContextCleanerInterceptor());
 
         if (bioProperties.isAuditsEnabled()) {

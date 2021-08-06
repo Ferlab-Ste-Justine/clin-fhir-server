@@ -3,9 +3,11 @@ package bio.ferlab.clin.auth;
 import bio.ferlab.clin.auth.data.UserPermissions;
 import bio.ferlab.clin.auth.data.UserPermissionsBuilder;
 import bio.ferlab.clin.exceptions.RptIntrospectionException;
-import bio.ferlab.clin.utils.Constants;
+import bio.ferlab.clin.utils.Helpers;
 import ca.uhn.fhir.rest.api.server.RequestDetails;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
+
 
 @Component
 public class RPTPermissionExtractor {
@@ -16,15 +18,20 @@ public class RPTPermissionExtractor {
     }
 
     public UserPermissions extract(RequestDetails requestDetails) {
-        final var rpt = requestDetails.getHeader(Constants.RPT_HEADER);
-        final var response = this.client.introspectRpt(rpt);
+        try {
+            final var bearer = requestDetails.getHeader(HttpHeaders.AUTHORIZATION);
+            final var rpt = Helpers.extractAccessTokenFromBearer(bearer);
+            final var response = this.client.introspectRpt(rpt);
 
-        if (!response.getActive()) {
-            throw new RptIntrospectionException(rpt);
+            if (!response.getActive()) {
+                throw new RptIntrospectionException(rpt);
+            }
+
+            final var builder = new UserPermissionsBuilder();
+            response.getPermissions().forEach(permission -> builder.allowResource(permission.getResourceName(), permission.getScopes()));
+            return builder.build();
+        } catch (Exception e) {
+            throw new RptIntrospectionException("");
         }
-
-        final var builder = new UserPermissionsBuilder();
-        response.getPermissions().forEach(permission -> builder.allowResource(permission.getResourceName(), permission.getScopes()));
-        return builder.build();
     }
 }

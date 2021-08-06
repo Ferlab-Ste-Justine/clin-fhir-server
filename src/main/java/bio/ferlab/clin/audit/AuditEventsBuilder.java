@@ -8,7 +8,9 @@ import org.hl7.fhir.r4.model.AuditEvent.AuditEventAgentComponent;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class AuditEventsBuilder {
@@ -126,7 +128,9 @@ public class AuditEventsBuilder {
 
         public static AuditResource fromReadAction(String url, String type) {
             final AuditResource auditResource = new AuditResource(null, AuditEventAction.R);
-            auditResource.setQuery(url.getBytes(StandardCharsets.UTF_8));
+            if (url != null) {
+                auditResource.setQuery(url.getBytes(StandardCharsets.UTF_8));
+            }
             auditResource.setType(createTypeCoding().setCode(type));
             return auditResource;
         }

@@ -1,0 +1,22 @@
+name: Publish Image Using Tag Name
+
+on:
+  push:
+    tags:
+      - v*
+
+jobs:
+  push:
+    name: Publish Image using tags
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Push the image on the registry
+        uses: Ferlab-Ste-Justine/action-push-image@master
+        with:
+          username: ${{ secrets.FERLAB_DOCKER_HUB_USER }}
+          password: ${{ secrets.FERLAB_DOCKER_HUB_TOKEN }}
+          image: ferlabcrsj/clin-fhir-server
+          tag_source: ref
+          location: .
+          dockerfile: Dockerfile

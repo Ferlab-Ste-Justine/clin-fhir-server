@@ -31,6 +31,7 @@ public class ValidationInterceptor extends RequestValidatingInterceptor {
         module.setAnyExtensionsAllowed(false);
         module.setErrorForUnknownProfiles(true);
         module.setNoTerminologyChecks(true);
+        module.setAssumeValidRestReferences(true);
         setValidatorModules(Collections.singletonList(module));
         return super.incomingRequestPostProcessed(requestDetails, request, response);
     }
