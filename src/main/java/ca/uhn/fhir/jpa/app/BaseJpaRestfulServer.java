@@ -51,6 +51,7 @@ import com.google.common.base.Strings;
 import org.hl7.fhir.r4.model.Bundle.BundleType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.cors.CorsConfiguration;
 
@@ -125,6 +126,9 @@ public class BaseJpaRestfulServer extends RestfulServer {
     private CqlProviderLoader cqlProviderLoader;
     @Autowired
     private IValidationSupport myValidationSupport;
+
+    @Autowired
+    RedisTemplate<String, String> redisTemplate;
 
     public BaseJpaRestfulServer() {
     }
@@ -434,5 +438,6 @@ public class BaseJpaRestfulServer extends RestfulServer {
         if (bioProperties.isAuditsEnabled()) {
             registerInterceptor(new ConsentInterceptor(consentServiceInterceptor));
         }
+        registerInterceptor(new ProducerInterceptor(redisTemplate));
     }
 }

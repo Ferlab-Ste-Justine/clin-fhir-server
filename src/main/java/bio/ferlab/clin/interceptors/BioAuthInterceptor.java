@@ -78,6 +78,9 @@ public class BioAuthInterceptor extends AuthorizationInterceptor {
     }
 
     private void applyRulesOnExport(IAuthRuleBuilder ruleBuilder) {
+
+//        ruleBuilder.allow().operation().named(Constants.EXPORT_OPERATION).onServer().andAllowAllResponses().andThen();
+//            ruleBuilder.allow().operation().named("$export-poll-status").onServer().andAllowAllResponses().andThen();
         ruleBuilder.allow().operation().named(Constants.EXPORT_OPERATION).onAnyType().andRequireExplicitResponseAuthorization().andThen();
     }
 
