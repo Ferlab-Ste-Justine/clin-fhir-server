@@ -1,55 +1,114 @@
 {
-  "properties": {
-    "authoredOn": {
-      "type": "date"
+  "index_patterns": ["clin-qa-prescriptions-*"],
+  "template": {
+    "settings": {
+      "number_of_shards": 1
     },
-    "bloodRelationship": {
-      "type": "boolean"
-    },
-    "cid": {
-      "type": "keyword"
-    },
-    "ethnicity": {
-      "type": "keyword"
-    },
-    "familyInfo": {
+    "mappings": {
+      "_source": {
+        "enabled": true
+      },
       "properties": {
-        "cid": {
-          "type": "keyword"
-        },
-        "type": {
-          "type": "keyword"
-        }
-      }
-    },
-    "mrn": {
-      "type": "keyword"
-    },
-    "patientInfo": {
-      "properties": {
-        "birthDate": {
+        "authoredOn": {
           "type": "date"
         },
+        "bloodRelationship": {
+          "type": "boolean"
+        },
         "cid": {
           "type": "keyword"
         },
-        "fetus": {
-          "type": "boolean"
-        },
-        "firstName": {
+        "ethnicity": {
           "type": "keyword"
         },
-        "gender": {
-          "type": "keyword"
-        },
-        "lastName": {
-          "type": "keyword"
-        },
-        "lastNameFirstName": {
-          "type": "keyword"
+        "familyInfo": {
+          "properties": {
+            "cid": {
+              "type": "keyword"
+            },
+            "type": {
+              "type": "keyword"
+            }
+          }
         },
         "mrn": {
           "type": "keyword"
+        },
+        "patientInfo": {
+          "properties": {
+            "birthDate": {
+              "type": "date"
+            },
+            "cid": {
+              "type": "keyword"
+            },
+            "fetus": {
+              "type": "boolean"
+            },
+            "firstName": {
+              "type": "keyword"
+            },
+            "gender": {
+              "type": "keyword"
+            },
+            "lastName": {
+              "type": "keyword"
+            },
+            "lastNameFirstName": {
+              "type": "keyword"
+            },
+            "mrn": {
+              "type": "keyword"
+            },
+            "organization": {
+              "properties": {
+                "cid": {
+                  "type": "keyword"
+                },
+                "name": {
+                  "type": "keyword"
+                }
+              }
+            },
+            "position": {
+              "type": "keyword"
+            },
+            "ramq": {
+              "type": "keyword"
+            }
+          }
+        },
+        "prescriber": {
+          "properties": {
+            "cid": {
+              "type": "keyword"
+            },
+            "firstName": {
+              "type": "keyword"
+            },
+            "lastName": {
+              "type": "keyword"
+            },
+            "lastNameFirstName": {
+              "type": "keyword"
+            }
+          }
+        },
+        "approver": {
+          "properties": {
+            "cid": {
+              "type": "keyword"
+            },
+            "firstName": {
+              "type": "keyword"
+            },
+            "lastName": {
+              "type": "keyword"
+            },
+            "lastNameFirstName": {
+              "type": "keyword"
+            }
+          }
         },
         "organization": {
           "properties": {
@@ -61,74 +120,26 @@
             }
           }
         },
-        "position": {
+        "status": {
           "type": "keyword"
         },
-        "ramq": {
-          "type": "keyword"
+        "submitted": {
+          "type": "boolean"
+        },
+        "analysis": {
+          "properties": {
+            "code": {
+              "type": "keyword"
+            },
+            "display": {
+              "type": "keyword"
+            }
+          }
+        },
+        "timestamp": {
+          "type": "date"
         }
       }
-    },
-    "prescriber": {
-      "properties": {
-        "cid": {
-          "type": "keyword"
-        },
-        "firstName": {
-          "type": "keyword"
-        },
-        "lastName": {
-          "type": "keyword"
-        },
-        "lastNameFirstName": {
-          "type": "keyword"
-        }
-      }
-    },
-    "approver": {
-      "properties": {
-        "cid": {
-          "type": "keyword"
-        },
-        "firstName": {
-          "type": "keyword"
-        },
-        "lastName": {
-          "type": "keyword"
-        },
-        "lastNameFirstName": {
-          "type": "keyword"
-        }
-      }
-    },
-    "organization": {
-      "properties": {
-        "cid": {
-          "type": "keyword"
-        },
-        "name": {
-          "type": "keyword"
-        }
-      }
-    },
-    "status": {
-      "type": "keyword"
-    },
-    "submitted": {
-      "type": "boolean"
-    },
-    "analysis": {
-      "properties": {
-        "code": {
-          "type": "keyword"
-        },
-        "display": {
-          "type": "keyword"
-        }
-      }
-    },
-    "timestamp": {
-      "type": "date"
     }
   }
 }

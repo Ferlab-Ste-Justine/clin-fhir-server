@@ -1,60 +1,39 @@
 {
-  "properties": {
-    "birthDate": {
-      "type": "date"
+  "index_patterns": ["clin-qa-patients-*"],
+  "template": {
+    "settings": {
+      "number_of_shards": 1
     },
-    "bloodRelationship": {
-      "type": "keyword"
-    },
-    "cid": {
-      "type": "keyword"
-    },
-    "ethnicity": {
-      "type": "keyword"
-    },
-    "familyId": {
-      "type": "keyword"
-    },
-    "familyType": {
-      "type": "keyword"
-    },
-    "fetus": {
-      "type": "boolean"
-    },
-    "firstName": {
-      "type": "keyword"
-    },
-    "gender": {
-      "type": "keyword"
-    },
-    "lastName": {
-      "type": "keyword"
-    },
-    "lastNameFirstName": {
-      "type": "keyword"
-    },
-    "mrn": {
-      "type": "keyword"
-    },
-    "organization": {
+    "mappings": {
+      "_source": {
+        "enabled": true
+      },
       "properties": {
+        "birthDate": {
+          "type": "date"
+        },
+        "bloodRelationship": {
+          "type": "keyword"
+        },
         "cid": {
           "type": "keyword"
         },
-        "name": {
+        "ethnicity": {
           "type": "keyword"
-        }
-      }
-    },
-    "position": {
-      "type": "keyword"
-    },
-    "practitioner": {
-      "properties": {
-        "cid": {
+        },
+        "familyId": {
           "type": "keyword"
+        },
+        "familyType": {
+          "type": "keyword"
+        },
+        "fetus": {
+          "type": "boolean"
         },
         "firstName": {
+          "type": "keyword"
+        },
+        "gender": {
           "type": "keyword"
         },
         "lastName": {
@@ -62,33 +41,65 @@
         },
         "lastNameFirstName": {
           "type": "keyword"
-        }
-      }
-    },
-    "ramq": {
-      "type": "keyword"
-    },
-    "requests": {
-      "properties": {
-        "prescription": {
+        },
+        "mrn": {
+          "type": "keyword"
+        },
+        "organization": {
+          "properties": {
+            "cid": {
+              "type": "keyword"
+            },
+            "name": {
+              "type": "keyword"
+            }
+          }
+        },
+        "position": {
+          "type": "keyword"
+        },
+        "practitioner": {
+          "properties": {
+            "cid": {
+              "type": "keyword"
+            },
+            "firstName": {
+              "type": "keyword"
+            },
+            "lastName": {
+              "type": "keyword"
+            },
+            "lastNameFirstName": {
+              "type": "keyword"
+            }
+          }
+        },
+        "ramq": {
+          "type": "keyword"
+        },
+        "requests": {
+          "properties": {
+            "prescription": {
+              "type": "date"
+            },
+            "request": {
+              "type": "keyword"
+            },
+            "status": {
+              "type": "keyword"
+            },
+            "submitted": {
+              "type": "boolean"
+            },
+            "test": {
+              "type": "keyword"
+            }
+          }
+        },
+        "timestamp": {
           "type": "date"
-        },
-        "request": {
-          "type": "keyword"
-        },
-        "status": {
-          "type": "keyword"
-        },
-        "submitted": {
-          "type": "boolean"
-        },
-        "test": {
-          "type": "keyword"
         }
       }
-    },
-    "timestamp": {
-      "type": "date"
     }
   }
 }
