@@ -1,7 +1,9 @@
 package bio.ferlab.clin.audit;
 
 
+import ca.uhn.fhir.interceptor.model.RequestPartitionId;
 import ca.uhn.fhir.jpa.api.dao.IFhirResourceDao;
+import ca.uhn.fhir.jpa.partition.SystemRequestDetails;
 import org.hl7.fhir.r4.model.AuditEvent;
 import org.springframework.stereotype.Component;
 
@@ -21,6 +23,8 @@ public class AuditTrail {
 
     public void auditEvent(AuditEvent event, boolean successful) {
         event.setOutcome(successful ? AuditEvent.AuditEventOutcome._0 : AuditEvent.AuditEventOutcome._4);
-        this.auditEventDao.create(event);
+        SystemRequestDetails req = new SystemRequestDetails();
+        req.setRequestPartitionId(RequestPartitionId.defaultPartition());
+        this.auditEventDao.create(event, req);
     }
 }

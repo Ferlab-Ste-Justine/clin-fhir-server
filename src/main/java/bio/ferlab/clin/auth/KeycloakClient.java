@@ -1,9 +1,6 @@
 package bio.ferlab.clin.auth;
 
-import bio.ferlab.clin.exceptions.RptIntrospectionException;
 import bio.ferlab.clin.properties.BioProperties;
-import ca.uhn.fhir.rest.server.exceptions.AuthenticationException;
-import org.apache.commons.lang3.StringUtils;
 import org.keycloak.authorization.client.AuthzClient;
 import org.keycloak.authorization.client.Configuration;
 import org.keycloak.authorization.client.representation.TokenIntrospectionResponse;
@@ -11,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class KeycloakClient {
+    public static final String TOKEN_ATTR_FHIR_ORG_ID = "fhir_organization_id";
     public static final String AUTH_CLIENT_SECRET_KEY = "secret";
     private final AuthzClient authzClient;
 

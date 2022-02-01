@@ -73,7 +73,7 @@ class ServiceRequestPerformerInterceptorTest {
     when(requestDetails.getRequestType()).thenReturn(RequestTypeEnum.POST);
     final ServiceRequest serviceRequest = new ServiceRequest().setCode(new CodeableConcept().setCoding(List.of(new Coding().setCode("foo"))));
     final IBundleProvider bundle = Mockito.mock(IBundleProvider.class);
-    when(dao.search(any())).thenReturn(bundle);
+    when(dao.search(any(), any())).thenReturn(bundle);
     when(bundle.isEmpty()).thenReturn(true);
     Exception ex = Assertions.assertThrows(
         InvalidRequestException.class,
@@ -88,7 +88,7 @@ class ServiceRequestPerformerInterceptorTest {
     when(requestDetails.getRequestType()).thenReturn(RequestTypeEnum.POST);
     final ServiceRequest serviceRequest = new ServiceRequest().setCode(new CodeableConcept().setCoding(List.of(new Coding().setCode("foo"))));
     final IBundleProvider bundle = Mockito.mock(IBundleProvider.class);
-    when(dao.search(any())).thenReturn(bundle);
+    when(dao.search(any(), any())).thenReturn(bundle);
     when(bundle.isEmpty()).thenReturn(false);
     final OrganizationAffiliation affiliation = new OrganizationAffiliation().setParticipatingOrganization(new Reference("bar"));
     when(bundle.getAllResources()).thenReturn(List.of(affiliation));
@@ -102,7 +102,7 @@ class ServiceRequestPerformerInterceptorTest {
     when(requestDetails.getRequestType()).thenReturn(RequestTypeEnum.PUT);
     final ServiceRequest serviceRequest = new ServiceRequest().setCode(new CodeableConcept().setCoding(List.of(new Coding().setCode("foo"))));
     final IBundleProvider bundle = Mockito.mock(IBundleProvider.class);
-    when(dao.search(any())).thenReturn(bundle);
+    when(dao.search(any(), any())).thenReturn(bundle);
     when(bundle.isEmpty()).thenReturn(false);
     final OrganizationAffiliation affiliation = new OrganizationAffiliation().setParticipatingOrganization(new Reference("bar"));
     when(bundle.getAllResources()).thenReturn(List.of(affiliation));

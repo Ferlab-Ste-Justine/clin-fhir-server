@@ -74,9 +74,9 @@ hapi:
     #    fhirpath_interceptor_enabled: false
     #    filter_search_enabled: true
     #    narrative_enabled: true
-    #partitioning:
-    #  allow_references_across_partitions: false
-    #  partitioning_include_in_search_hashes: false
+    partitioning:
+      allow_references_across_partitions: false
+      partitioning_include_in_search_hashes: false
     cors:
       enabled: true
       allow_Credentials: false

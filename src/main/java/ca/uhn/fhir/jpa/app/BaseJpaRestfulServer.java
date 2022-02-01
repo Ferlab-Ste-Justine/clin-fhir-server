@@ -7,7 +7,6 @@ import ca.uhn.fhir.context.FhirVersionEnum;
 import ca.uhn.fhir.context.support.IValidationSupport;
 import ca.uhn.fhir.cql.common.provider.CqlProviderLoader;
 import ca.uhn.fhir.interceptor.api.IInterceptorBroadcaster;
-import ca.uhn.fhir.interceptor.api.IInterceptorService;
 import ca.uhn.fhir.jpa.api.config.DaoConfig;
 import ca.uhn.fhir.jpa.api.dao.DaoRegistry;
 import ca.uhn.fhir.jpa.api.dao.IFhirSystemDao;
@@ -17,33 +16,17 @@ import ca.uhn.fhir.jpa.interceptor.CascadingDeleteInterceptor;
 import ca.uhn.fhir.jpa.packages.IPackageInstallerSvc;
 import ca.uhn.fhir.jpa.packages.PackageInstallationSpec;
 import ca.uhn.fhir.jpa.partition.PartitionManagementProvider;
-import ca.uhn.fhir.jpa.provider.GraphQLProvider;
-import ca.uhn.fhir.jpa.provider.IJpaSystemProvider;
-import ca.uhn.fhir.jpa.provider.JpaCapabilityStatementProvider;
-import ca.uhn.fhir.jpa.provider.JpaConformanceProviderDstu2;
-import ca.uhn.fhir.jpa.provider.SubscriptionTriggeringProvider;
-import ca.uhn.fhir.jpa.provider.TerminologyUploaderProvider;
+import ca.uhn.fhir.jpa.provider.*;
 import ca.uhn.fhir.jpa.provider.dstu3.JpaConformanceProviderDstu3;
 import ca.uhn.fhir.jpa.search.DatabaseBackedPagingProvider;
 import ca.uhn.fhir.jpa.subscription.util.SubscriptionDebugLogInterceptor;
 import ca.uhn.fhir.narrative.DefaultThymeleafNarrativeGenerator;
 import ca.uhn.fhir.narrative.INarrativeGenerator;
 import ca.uhn.fhir.narrative2.NullNarrativeGenerator;
-import ca.uhn.fhir.rest.server.ApacheProxyAddressStrategy;
-import ca.uhn.fhir.rest.server.ETagSupportEnum;
-import ca.uhn.fhir.rest.server.HardcodedServerAddressStrategy;
-import ca.uhn.fhir.rest.server.IncomingRequestAddressStrategy;
-import ca.uhn.fhir.rest.server.RestfulServer;
-import ca.uhn.fhir.rest.server.interceptor.CorsInterceptor;
-import ca.uhn.fhir.rest.server.interceptor.FhirPathFilterInterceptor;
-import ca.uhn.fhir.rest.server.interceptor.LoggingInterceptor;
-import ca.uhn.fhir.rest.server.interceptor.RequestValidatingInterceptor;
-import ca.uhn.fhir.rest.server.interceptor.ResponseHighlighterInterceptor;
-import ca.uhn.fhir.rest.server.interceptor.ResponseValidatingInterceptor;
+import ca.uhn.fhir.rest.server.*;
+import ca.uhn.fhir.rest.server.interceptor.*;
 import ca.uhn.fhir.rest.server.interceptor.consent.ConsentInterceptor;
-import ca.uhn.fhir.rest.server.interceptor.partition.RequestTenantPartitionInterceptor;
 import ca.uhn.fhir.rest.server.provider.ResourceProviderFactory;
-import ca.uhn.fhir.rest.server.tenant.UrlBaseTenantIdentificationStrategy;
 import ca.uhn.fhir.rest.server.util.ISearchParamRegistry;
 import ca.uhn.fhir.validation.IValidatorModule;
 import ca.uhn.fhir.validation.ResultSeverityEnum;
@@ -56,11 +39,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.web.cors.CorsConfiguration;
 
 import javax.servlet.ServletException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class BaseJpaRestfulServer extends RestfulServer {
@@ -84,8 +63,6 @@ public class BaseJpaRestfulServer extends RestfulServer {
     @Autowired
     DatabaseBackedPagingProvider databaseBackedPagingProvider;
     @Autowired
-    IInterceptorService interceptorService;
-    @Autowired
     IValidatorModule validatorModule;
     @Autowired
     Optional<GraphQLProvider> graphQLProvider;
@@ -106,6 +83,9 @@ public class BaseJpaRestfulServer extends RestfulServer {
     
     @Autowired
     ServiceRequestPerformerInterceptor serviceRequestPerformerInterceptor;
+    
+    @Autowired
+    TenantPartitionInterceptor tenantPartitionInterceptor;
 
     @Autowired
     FieldValidatorInterceptor fieldValidatorInterceptor;
@@ -324,7 +304,7 @@ public class BaseJpaRestfulServer extends RestfulServer {
         // will activate them and match results against them
         if (appProperties.getSubscription() != null) {
             // Subscription debug logging
-            interceptorService.registerInterceptor(new SubscriptionDebugLogInterceptor());
+            getInterceptorService().registerInterceptor(new SubscriptionDebugLogInterceptor());
         }
 
         // Cascading deletes
@@ -378,9 +358,10 @@ public class BaseJpaRestfulServer extends RestfulServer {
 
         // Partitioning
         if (appProperties.getPartitioning() != null) {
-            registerInterceptor(new RequestTenantPartitionInterceptor());
-            setTenantIdentificationStrategy(new UrlBaseTenantIdentificationStrategy());
-            registerProviders(partitionManagementProvider);
+            registerInterceptor(tenantPartitionInterceptor);
+            setTenantIdentificationStrategy(tenantPartitionInterceptor);
+            // no need to partitionManagementProvider we have a custom create partition in tenantPartitionInterceptor
+            //registerProviders(partitionManagementProvider);
         }
 
         if (appProperties.getClient_id_strategy() == DaoConfig.ClientIdStrategyEnum.ANY) {
@@ -401,7 +382,7 @@ public class BaseJpaRestfulServer extends RestfulServer {
         }
 
         if (factory != null) {
-            interceptorService.registerInterceptor(factory.buildUsingStoredStructureDefinitions());
+            getInterceptorService().registerInterceptor(factory.buildUsingStoredStructureDefinitions());
         }
 
 

@@ -3,6 +3,7 @@ package bio.ferlab.clin.interceptors;
 import bio.ferlab.clin.auth.RPTPermissionExtractor;
 import bio.ferlab.clin.auth.data.Permission;
 import bio.ferlab.clin.auth.data.UserPermissions;
+import ca.uhn.fhir.jpa.app.AppProperties;
 import ca.uhn.fhir.rest.api.server.RequestDetails;
 import ca.uhn.fhir.rest.server.interceptor.auth.IAuthRule;
 import org.hl7.fhir.r4.model.Patient;
@@ -19,8 +20,9 @@ import static org.mockito.Mockito.when;
 
 class BioAuthInterceptorTest {
   
+  final AppProperties appProperties = new AppProperties();
   final RPTPermissionExtractor rptPermissionExtractor = Mockito.mock(RPTPermissionExtractor.class);
-  final BioAuthInterceptor bioAuthInterceptor = new BioAuthInterceptor(rptPermissionExtractor);
+  final BioAuthInterceptor bioAuthInterceptor = new BioAuthInterceptor(rptPermissionExtractor, appProperties);
   
   private static final boolean testRule(IAuthRule rule, String operation, Class<? extends Resource> clazz) {
     final String ruleStr = rule.toString();

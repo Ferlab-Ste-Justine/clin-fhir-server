@@ -5,6 +5,8 @@ import bio.ferlab.clin.es.data.FamilyGroupInfoData;
 import bio.ferlab.clin.es.data.PatientData;
 import bio.ferlab.clin.es.data.PrescriptionData;
 import bio.ferlab.clin.utils.Extensions;
+import ca.uhn.fhir.interceptor.model.RequestPartitionId;
+import ca.uhn.fhir.jpa.partition.SystemRequestDetails;
 import ca.uhn.fhir.rest.api.server.IBundleProvider;
 import ca.uhn.fhir.rest.api.server.RequestDetails;
 import org.hl7.fhir.instance.model.api.IBaseResource;
@@ -19,6 +21,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static bio.ferlab.clin.interceptors.TenantPartitionInterceptor.systemRequestDetails;
 
 @Component
 public class PrescriptionDataBuilder {
@@ -37,20 +41,20 @@ public class PrescriptionDataBuilder {
         final List<PrescriptionData> prescriptionDataList = new ArrayList<>();
         for (final String serviceRequestId : ids) {
             final PrescriptionData prescriptionData = new PrescriptionData();
-            final ServiceRequest serviceRequest = this.configuration.serviceRequestDAO.read(new IdType(serviceRequestId), requestDetails);
+            final ServiceRequest serviceRequest = this.configuration.serviceRequestDAO.read(new IdType(serviceRequestId), systemRequestDetails);
             if (!serviceRequest.hasSubject()) {
                 log.error(String.format("Cannot index ServiceRequest [%s]: resource has no subject.", serviceRequestId));
                 continue;
             }
             final Reference subject = serviceRequest.getSubject();
-            final Patient patient = this.configuration.patientDAO.read(new IdType(subject.getReference()), requestDetails);
+            final Patient patient = this.configuration.patientDAO.read(new IdType(subject.getReference()), systemRequestDetails);
 
             this.handlePatient(patient, prescriptionData.getPatientInfo());
             this.handleServiceRequest(serviceRequest, prescriptionData);
             if (patient.hasExtension(Extensions.FAMILY_ID)) {
                 final Extension extension = patient.getExtensionByUrl(Extensions.FAMILY_ID);
                 final Reference ref = (Reference) extension.getValue();
-                final Group group = this.configuration.groupDao.read(ref.getReferenceElement());
+                final Group group = this.configuration.groupDao.read(ref.getReferenceElement(), systemRequestDetails);
                 this.handleFamilyGroup(group, prescriptionData.getFamilyInfo());
             }
             // clean-up + full text
@@ -98,7 +102,7 @@ public class PrescriptionDataBuilder {
 
         if (patient.hasManagingOrganization()) {
             final String id = patient.getManagingOrganization().getReference();
-            final Organization organization = configuration.organizationDAO.read(new IdType(id));
+            final Organization organization = configuration.organizationDAO.read(new IdType(id), systemRequestDetails);
             patientInfo.getOrganization().setCid(organization.getIdElement().getIdPart());
             patientInfo.getOrganization().setName(organization.hasName() ? organization.getName() : "");
         }
@@ -130,8 +134,8 @@ public class PrescriptionDataBuilder {
         if (serviceRequest.hasExtension(Extensions.PROCEDURE_DIRECTED_BY)) {
             final Extension extension = serviceRequest.getExtensionByUrl(Extensions.PROCEDURE_DIRECTED_BY);
             final Reference ref = (Reference) extension.getValue();
-            final PractitionerRole role = this.configuration.practitionerRoleDao.read(ref.getReferenceElement());
-            final Practitioner practitioner = this.configuration.practitionerDao.read(role.getPractitioner().getReferenceElement());
+            final PractitionerRole role = this.configuration.practitionerRoleDao.read(ref.getReferenceElement(), systemRequestDetails);
+            final Practitioner practitioner = this.configuration.practitionerDao.read(role.getPractitioner().getReferenceElement(), systemRequestDetails);
             final Name name = extractName(practitioner.getName());
             prescriptionData.getApprover().setCid(practitioner.getIdElement().getIdPart());
             prescriptionData.getApprover().setFirstName(name.firstName);
@@ -149,7 +153,7 @@ public class PrescriptionDataBuilder {
 
         if (serviceRequest.hasRequester()) {
             final String id = serviceRequest.getRequester().getReference();
-            final Practitioner practitioner = configuration.practitionerDao.read(new IdType(id));
+            final Practitioner practitioner = configuration.practitionerDao.read(new IdType(id), systemRequestDetails);
             final Name name = extractName(practitioner.getName());
             prescriptionData.getPrescriber().setCid(practitioner.getIdElement().getIdPart());
             prescriptionData.getPrescriber().setLastName(name.lastName);
@@ -164,7 +168,7 @@ public class PrescriptionDataBuilder {
             }
             if (identifier.hasAssigner()) {
                 final String id = identifier.getAssigner().getReference();
-                final Organization organization = configuration.organizationDAO.read(new IdType(id));
+                final Organization organization = configuration.organizationDAO.read(new IdType(id), systemRequestDetails);
                 prescriptionData.getOrganization().setCid(organization.getIdElement().getIdPart());
                 prescriptionData.getOrganization().setName(organization.hasName() ? organization.getName() : "");
             }

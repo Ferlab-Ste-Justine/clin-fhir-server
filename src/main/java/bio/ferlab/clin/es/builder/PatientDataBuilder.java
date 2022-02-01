@@ -4,6 +4,8 @@ import bio.ferlab.clin.es.config.ResourceDaoConfiguration;
 import bio.ferlab.clin.es.data.PatientData;
 import bio.ferlab.clin.es.data.PrescriptionData;
 import bio.ferlab.clin.utils.Extensions;
+import ca.uhn.fhir.interceptor.model.RequestPartitionId;
+import ca.uhn.fhir.jpa.partition.SystemRequestDetails;
 import ca.uhn.fhir.jpa.searchparam.SearchParameterMap;
 import ca.uhn.fhir.rest.api.server.IBundleProvider;
 import ca.uhn.fhir.rest.api.server.RequestDetails;
@@ -15,6 +17,8 @@ import org.springframework.stereotype.Component;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static bio.ferlab.clin.interceptors.TenantPartitionInterceptor.systemRequestDetails;
 
 @Component
 public class PatientDataBuilder {
@@ -32,18 +36,18 @@ public class PatientDataBuilder {
         final List<PatientData> patientDataList = new ArrayList<>();
         for (final String patientId : ids) {
             final PatientData patientData = new PatientData();
-            final Patient patient = this.configuration.patientDAO.read(new IdType(patientId), requestDetails);
+            final Patient patient = this.configuration.patientDAO.read(new IdType(patientId), systemRequestDetails);
 
             this.handlePatient(patient, patientData);
             if (patient.hasExtension(Extensions.FAMILY_ID)) {
                 final Extension extension = patient.getExtensionByUrl(Extensions.FAMILY_ID);
                 final Reference ref = (Reference) extension.getValue();
-                final Group group = this.configuration.groupDao.read(ref.getReferenceElement());
+                final Group group = this.configuration.groupDao.read(ref.getReferenceElement(), systemRequestDetails);
                 this.handleFamilyGroup(group, patientData);
             }
 
             final SearchParameterMap searchMap = SearchParameterMap.newSynchronous("subject", new ReferenceParam(patientId));
-            final IBundleProvider srProvider = this.configuration.serviceRequestDAO.search(searchMap);
+            final IBundleProvider srProvider = this.configuration.serviceRequestDAO.search(searchMap, systemRequestDetails);
 
             final List<ServiceRequest> serviceRequests = getListFromProvider(srProvider);
             for (ServiceRequest serviceRequest : serviceRequests) {
@@ -119,8 +123,8 @@ public class PatientDataBuilder {
 
         if (patient.hasGeneralPractitioner()) {
             final String id = patient.getGeneralPractitioner().get(0).getReference();
-            final PractitionerRole practitionerRole = configuration.practitionerRoleDao.read(new IdType(id));
-            final Practitioner practitioner = configuration.practitionerDao.read(practitionerRole.getPractitioner().getReferenceElement());
+            final PractitionerRole practitionerRole = configuration.practitionerRoleDao.read(new IdType(id), systemRequestDetails);
+            final Practitioner practitioner = configuration.practitionerDao.read(practitionerRole.getPractitioner().getReferenceElement(), systemRequestDetails);
             final Name name = extractName(practitioner.getName());
             patientData.getPractitioner().setCid(practitioner.getIdElement().getIdPart());
             patientData.getPractitioner().setLastName(name.lastName);
@@ -130,7 +134,7 @@ public class PatientDataBuilder {
 
         if (patient.hasManagingOrganization()) {
             final String id = patient.getManagingOrganization().getReference();
-            final Organization organization = configuration.organizationDAO.read(new IdType(id));
+            final Organization organization = configuration.organizationDAO.read(new IdType(id), systemRequestDetails);
             patientData.getOrganization().setCid(organization.getIdElement().getIdPart());
             patientData.getOrganization().setName(organization.hasName() ? organization.getName() : "");
         }
@@ -174,7 +178,7 @@ public class PatientDataBuilder {
 
         if (serviceRequest.hasRequester()) {
             final String id = serviceRequest.getRequester().getReference();
-            final Practitioner practitioner = configuration.practitionerDao.read(new IdType(id));
+            final Practitioner practitioner = configuration.practitionerDao.read(new IdType(id), systemRequestDetails);
             final Name name = extractName(practitioner.getName());
             requestData.getPrescriber().setCid(practitioner.getIdElement().getIdPart());
             requestData.getPrescriber().setLastName(name.lastName);
@@ -185,8 +189,8 @@ public class PatientDataBuilder {
         if (serviceRequest.hasExtension(Extensions.PROCEDURE_DIRECTED_BY)) {
             final Extension extension = serviceRequest.getExtensionByUrl(Extensions.PROCEDURE_DIRECTED_BY);
             final Reference ref = (Reference) extension.getValue();
-            final PractitionerRole role = this.configuration.practitionerRoleDao.read(ref.getReferenceElement());
-            final Practitioner practitioner = this.configuration.practitionerDao.read(role.getPractitioner().getReferenceElement());
+            final PractitionerRole role = this.configuration.practitionerRoleDao.read(ref.getReferenceElement(), systemRequestDetails);
+            final Practitioner practitioner = this.configuration.practitionerDao.read(role.getPractitioner().getReferenceElement(), systemRequestDetails);
             final Name name = extractName(practitioner.getName());
             requestData.getApprover().setCid(practitioner.getIdElement().getIdPart());
             requestData.getApprover().setFirstName(name.firstName);
@@ -201,7 +205,7 @@ public class PatientDataBuilder {
             }
             if (identifier.hasAssigner()) {
                 final String id = identifier.getAssigner().getReference();
-                final Organization organization = configuration.organizationDAO.read(new IdType(id));
+                final Organization organization = configuration.organizationDAO.read(new IdType(id), systemRequestDetails);
                 requestData.getOrganization().setCid(organization.getIdElement().getIdPart());
                 requestData.getOrganization().setName(organization.hasName() ? organization.getName() : "");
             }

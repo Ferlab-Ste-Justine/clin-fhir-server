@@ -21,6 +21,8 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 
+import static bio.ferlab.clin.interceptors.TenantPartitionInterceptor.systemRequestDetails;
+
 @Service
 @Interceptor
 public class ServiceRequestPerformerInterceptor {
@@ -56,7 +58,8 @@ public class ServiceRequestPerformerInterceptor {
   
   private OrganizationAffiliation findOrganizationAffiliationByCode(String code) {
     final IBundleProvider searchResultBundle = this.configuration.organizationAffiliationDAO
-        .search(SearchParameterMap.newSynchronous().add(OrganizationAffiliation.SP_SPECIALTY, new TokenParam(code)));
+        .search(SearchParameterMap.newSynchronous().add(OrganizationAffiliation.SP_SPECIALTY, new TokenParam(code))
+            , systemRequestDetails);
     if (searchResultBundle.isEmpty()) {
       throw new InvalidRequestException("Can't find organization affiliation attached to code " + code);
     }
