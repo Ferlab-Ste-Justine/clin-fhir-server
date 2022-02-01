@@ -3,7 +3,9 @@ package bio.ferlab.clin.auth;
 import bio.ferlab.clin.auth.data.UserPermissions;
 import bio.ferlab.clin.auth.data.UserPermissionsBuilder;
 import bio.ferlab.clin.exceptions.RptIntrospectionException;
+import bio.ferlab.clin.properties.BioProperties;
 import bio.ferlab.clin.utils.Helpers;
+import ca.uhn.fhir.jpa.app.AppProperties;
 import ca.uhn.fhir.rest.api.server.RequestDetails;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.Claim;
@@ -18,15 +20,21 @@ import static bio.ferlab.clin.auth.KeycloakClient.TOKEN_ATTR_FHIR_ORG_ID;
 
 @Component
 public class RPTPermissionExtractor {
+    public static final String ALL_TENANT_IDS = "*";
     private final KeycloakClient client;
-    public RPTPermissionExtractor(KeycloakClient client) {
+    private final BioProperties properties;
+    public RPTPermissionExtractor(KeycloakClient client, BioProperties properties) {
         this.client = client;
+        this.properties = properties;
     }
     
     public String getFhirOrganizationId(RequestDetails requestDetails) {
         final var bearer = requestDetails.getHeader(HttpHeaders.AUTHORIZATION);
         final var rpt = Helpers.extractAccessTokenFromBearer(bearer);
-        return Optional.ofNullable(JWT.decode(rpt).getClaim(TOKEN_ATTR_FHIR_ORG_ID)).map(Claim::asString)
+        final var jwt = JWT.decode(rpt);
+        final var isSystem = Optional.ofNullable(jwt.getClaim("azp")).map(Claim::asString)
+            .orElse("").equals(properties.getAuthSystemId());
+        return isSystem ? ALL_TENANT_IDS : Optional.ofNullable(jwt.getClaim(TOKEN_ATTR_FHIR_ORG_ID)).map(Claim::asString)
             .orElseThrow(() -> new RptIntrospectionException("missing " + TOKEN_ATTR_FHIR_ORG_ID));
     }
 

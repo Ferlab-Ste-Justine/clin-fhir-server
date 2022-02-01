@@ -1,6 +1,7 @@
 package bio.ferlab.clin.auth;
 
 import bio.ferlab.clin.exceptions.RptIntrospectionException;
+import bio.ferlab.clin.properties.BioProperties;
 import ca.uhn.fhir.rest.api.server.RequestDetails;
 import org.junit.jupiter.api.*;
 import org.keycloak.authorization.client.representation.TokenIntrospectionResponse;
@@ -14,9 +15,10 @@ import static org.mockito.Mockito.*;
 
 public class RPTPermissionExtractorTest {
   
+  final BioProperties bioProperties = Mockito.mock(BioProperties.class);
   final KeycloakClient keycloakClient = Mockito.mock(KeycloakClient.class);
   final TokenIntrospectionResponse introspectionResponse = Mockito.mock(TokenIntrospectionResponse.class);
-  final RPTPermissionExtractor extractor = new RPTPermissionExtractor(keycloakClient);
+  final RPTPermissionExtractor extractor = new RPTPermissionExtractor(keycloakClient, bioProperties);
   
   @BeforeEach 
   void beforeEach() {

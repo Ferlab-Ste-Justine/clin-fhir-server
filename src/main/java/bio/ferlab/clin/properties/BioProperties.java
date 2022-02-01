@@ -23,6 +23,7 @@ public class BioProperties {
     private final boolean isAuthorizationEnabled;
     private final String authClientId;
     private final String authClientSecret;
+    private final String authSystemId;
 
     public BioProperties(
             @Value("${bio.elasticsearch.enabled}") boolean isBioEsEnabled,
@@ -38,7 +39,8 @@ public class BioProperties {
             @Value("${bio.audits.enabled}") boolean isAuditsEnabled,
             @Value("${bio.auth.authorization.enabled}") boolean isAuthorizationEnabled,
             @Value("${bio.auth.authorization.client-id}") String authClientId,
-            @Value("${bio.auth.authorization.client-secret}") String authClientSecret
+            @Value("${bio.auth.authorization.client-secret}") String authClientSecret,
+            @Value("${bio.auth.authorization.system-id}") String authSystemId
     ) {
         this.isBioEsEnabled = isBioEsEnabled;
         this.esHost = esHost;
@@ -54,5 +56,6 @@ public class BioProperties {
         this.isAuthorizationEnabled = isAuthorizationEnabled;
         this.authClientId = authClientId;
         this.authClientSecret = authClientSecret;
+        this.authSystemId = authSystemId;
     }
 }

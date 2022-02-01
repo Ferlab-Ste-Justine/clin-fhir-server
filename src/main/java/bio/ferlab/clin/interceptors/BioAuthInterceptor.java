@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+import static bio.ferlab.clin.auth.RPTPermissionExtractor.ALL_TENANT_IDS;
 import static bio.ferlab.clin.interceptors.TenantPartitionInterceptor.PARTITIONED_RESOURCES;
 
 @Service
@@ -28,7 +29,9 @@ public class BioAuthInterceptor extends AuthorizationInterceptor {
 
     private <T extends Resource> void
     withTenantId(IAuthRuleBuilderRuleOpClassifierFinished op, Class<T> resourceType, String tenantId) {
-        if(appProperties.getPartitioning() != null && PARTITIONED_RESOURCES.contains(resourceType.getSimpleName())) {
+        if(appProperties.getPartitioning() != null 
+            && PARTITIONED_RESOURCES.contains(resourceType.getSimpleName()) 
+            && !ALL_TENANT_IDS.equals(tenantId)) {
             op.forTenantIds(tenantId).andThen();    // only of partitioning enable and resource is partitioned
         } else {
             op.andThen();

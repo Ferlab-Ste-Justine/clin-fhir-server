@@ -167,5 +167,6 @@ bio:
     authorization:
       enabled: true
       client-id: clin-acl
+      system-id: clin-system
   audits:
     enabled: true
