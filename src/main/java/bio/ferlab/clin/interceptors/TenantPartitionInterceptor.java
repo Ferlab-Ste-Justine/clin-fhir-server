@@ -16,15 +16,19 @@ import ca.uhn.fhir.rest.server.tenant.ITenantIdentificationStrategy;
 import ca.uhn.fhir.util.UrlPathTokenizer;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
+import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Organization;
 import org.hl7.fhir.r4.model.ServiceRequest;
 import org.hl7.fhir.r4.model.StringType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+
+import static bio.ferlab.clin.auth.RPTPermissionExtractor.ALL_TENANT_IDS;
 
 @Service
 @Interceptor
@@ -53,7 +57,7 @@ public class TenantPartitionInterceptor implements ITenantIdentificationStrategy
 
   @Hook(Pointcut.STORAGE_PARTITION_IDENTIFY_CREATE)
   public RequestPartitionId partitionIdentifyCreate(IBaseResource theResource, ServletRequestDetails theRequestDetails) {
-    // extract the partition name from the created resource
+    // extract the partition name from the created resource, only 1 partition can be created
     final RequestPartitionId partition = extractPartitionIdFromResource(theResource);
     this.createPartitionIfNeeded(partition);  // it's required + we don't want to do it manually
     return partition;
@@ -62,7 +66,12 @@ public class TenantPartitionInterceptor implements ITenantIdentificationStrategy
   @Hook(Pointcut.STORAGE_PARTITION_IDENTIFY_READ)
   public RequestPartitionId partitionIdentifyRead(ServletRequestDetails theRequestDetails) {
     // extract partition id from token if resource is partitioned
-    if(PARTITIONED_RESOURCES.contains(theRequestDetails.getResourceName())) {
+    if(ALL_TENANT_IDS.equals(theRequestDetails.getTenantId())) {
+      return RequestPartitionId.allPartitions();
+    } else if(theRequestDetails.getResource() instanceof Bundle) {
+      //return RequestPartitionId.fromPartitionNames(JpaConstants.DEFAULT_PARTITION_NAME, theRequestDetails.getTenantId());
+      return RequestPartitionId.allPartitions();
+    } else if(PARTITIONED_RESOURCES.contains(theRequestDetails.getResourceName())) {
       return RequestPartitionId.fromPartitionName(theRequestDetails.getTenantId());
     } else {
       return RequestPartitionId.defaultPartition(); // if not partitioned then default
@@ -81,7 +90,8 @@ public class TenantPartitionInterceptor implements ITenantIdentificationStrategy
   }
   
   private void createPartitionIfNeeded(RequestPartitionId partitionId) {
-    partitionId.getPartitionNames().forEach(name -> {
+    final List<String> names = Optional.ofNullable(partitionId.getPartitionNames()).orElse(Collections.emptyList());
+    names.forEach(name -> {
       if(partitionDao.findForName(name).isEmpty()) {
         log.info("Create new partition named: {}", name);
         PartitionEntity partitionEntity = new PartitionEntity();
