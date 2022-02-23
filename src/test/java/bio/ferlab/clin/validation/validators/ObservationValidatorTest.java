@@ -25,39 +25,6 @@ public class ObservationValidatorTest {
     @DisplayName("Valid")
     class Valid {
         @Nested
-        @DisplayName("CGH Observation")
-        class CGH {
-            @BeforeEach
-            void setup() {
-                final CodeableConcept code = new CodeableConcept();
-                code.addCoding().setCode("CGH");
-                observation.setCode(code);
-            }
-
-            @Test
-            @DisplayName("With abnormal interpretation")
-            void validAbnormal() {
-                observation.setInterpretation(Collections.singletonList(createInterpretation("A")));
-                observation.addNote().setText("Note");
-                Assertions.assertTrue(observationValidator.validateResource(observation));
-            }
-
-            @Test
-            @DisplayName("With normal interpretation")
-            void validNormal() {
-                observation.setInterpretation(Collections.singletonList(createInterpretation("N")));
-                Assertions.assertTrue(observationValidator.validateResource(observation));
-            }
-
-            @Test
-            @DisplayName("With Indeterminate interpretation")
-            void validIndeterminate() {
-                observation.setInterpretation(Collections.singletonList(createInterpretation("IND")));
-                Assertions.assertTrue(observationValidator.validateResource(observation));
-            }
-        }
-
-        @Nested
         @DisplayName("Phenotype Observation")
         class HPO {
             @BeforeEach
@@ -119,18 +86,6 @@ public class ObservationValidatorTest {
             @Nested
             @DisplayName("When abnormal interpretation")
             class Abnormal {
-
-                @Nested
-                @DisplayName("Without Precision")
-                class NoPrecision {
-                    @Test
-                    @DisplayName("Should return false")
-                    void withoutPrecision() {
-                        observation.setInterpretation(Collections.singletonList(createInterpretation("A")));
-                        Assertions.assertFalse(observationValidator.validateResource(observation));
-                    }
-                }
-
                 @Nested
                 @DisplayName("With malformed precision")
                 class MalformedPrecision {

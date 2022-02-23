@@ -18,12 +18,6 @@ public class ObservationValidator extends SchemaValidator<Observation> {
         CONS,
     }
 
-    private enum CghInterpretationEnum {
-        A,
-        N,
-        IND
-    }
-
     private enum PhenotypeInterpretationEnum {
         NEG,
         POS,
@@ -60,29 +54,6 @@ public class ObservationValidator extends SchemaValidator<Observation> {
     }
 
     private boolean validateCgh(Observation resource) {
-        // Make sure the CGH Observation has only one interpretation
-        if (resource.getInterpretation().size() != 1) {
-            return false;
-        }
-
-        // Make sure the interpretation has only one coding
-        final CodeableConcept interpretation = resource.getInterpretation().get(0);
-        if (interpretation.isEmpty() || interpretation.getCoding().size() != 1) {
-            return false;
-        }
-
-        final String code = interpretation.getCoding().get(0).getCode();
-
-        // Make sur the CGH interpretation is supported
-        if (!EnumUtils.isValidEnum(CghInterpretationEnum.class, code)) {
-            return false;
-        }
-
-        // Make sure there is a note if the interpretation is abnormal
-        if (code.contentEquals(CghInterpretationEnum.A.name()) && !resource.hasNote()) {
-            return false;
-        }
-
         // Make sure the note is valid if present
         return validateNote(resource);
     }
