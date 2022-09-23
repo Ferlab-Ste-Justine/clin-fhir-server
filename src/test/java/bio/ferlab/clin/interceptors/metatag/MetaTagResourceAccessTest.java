@@ -3,11 +3,14 @@ package bio.ferlab.clin.interceptors.metatag;
 import bio.ferlab.clin.exceptions.RptIntrospectionException;
 import bio.ferlab.clin.properties.BioProperties;
 import ca.uhn.fhir.model.dstu2.resource.AuditEvent;
+import ca.uhn.fhir.model.dstu2.resource.Observation;
+import ca.uhn.fhir.model.dstu2.resource.Patient;
 import ca.uhn.fhir.rest.api.RequestTypeEnum;
 import ca.uhn.fhir.rest.api.server.RequestDetails;
 import ca.uhn.fhir.rest.server.exceptions.InvalidRequestException;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import org.hl7.fhir.r4.model.ClinicalImpression;
 import org.hl7.fhir.r4.model.ServiceRequest;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -99,6 +102,32 @@ class MetaTagResourceAccessTest {
     when(requestDetails.getHeader("Authorization")).thenReturn("Bearer "+ bearer);
     final ServiceRequest resource = new ServiceRequest();
     assertTrue(metaTagResourceAccess.canSeeResource(requestDetails, resource));
+  }
+
+  @Test
+  void canSeeResource_LDM_tags() {
+    final RequestDetails requestDetails = Mockito.mock(RequestDetails.class);
+    when(requestDetails.getRequestType()).thenReturn(RequestTypeEnum.GET);
+    String bearer = JWT.create()
+        .withClaim(TOKEN_ATTR_FHIR_ORG_ID, List.of("LDM-X"))
+        .sign(Algorithm.HMAC256("secret"));
+    when(requestDetails.getHeader("Authorization")).thenReturn("Bearer "+ bearer);
+    final ServiceRequest resource = new ServiceRequest();
+    resource.getMeta().addSecurity().setCode("anyTag"); // allowed because LDM can see all of them
+    assertTrue(metaTagResourceAccess.canSeeResource(requestDetails, resource));
+  }
+  
+  @Test
+  void canAccessResource_all_but_service_request() {
+    final RequestDetails requestDetails = Mockito.mock(RequestDetails.class);
+    when(requestDetails.getRequestType()).thenReturn(RequestTypeEnum.GET);
+    String bearer = JWT.create()
+        .withClaim(TOKEN_ATTR_FHIR_ORG_ID, List.of("foo"))
+        .sign(Algorithm.HMAC256("secret"));
+    when(requestDetails.getHeader("Authorization")).thenReturn("Bearer "+ bearer);
+    assertTrue(metaTagResourceAccess.canSeeResource(requestDetails, new Patient()));
+    assertTrue(metaTagResourceAccess.canSeeResource(requestDetails, new Observation()));
+    assertTrue(metaTagResourceAccess.canSeeResource(requestDetails, new ClinicalImpression()));
   }
 
   @Test

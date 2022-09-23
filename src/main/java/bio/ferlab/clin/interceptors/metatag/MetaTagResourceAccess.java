@@ -7,9 +7,11 @@ import ca.uhn.fhir.rest.api.RequestTypeEnum;
 import ca.uhn.fhir.rest.api.server.RequestDetails;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.Claim;
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseCoding;
 import org.hl7.fhir.instance.model.api.IBaseResource;
+import org.hl7.fhir.r4.model.ServiceRequest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 
@@ -20,18 +22,16 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Component
+@RequiredArgsConstructor
 public class MetaTagResourceAccess {
 
   // all meta/tags compatible resources, adding one need an implementation in MetaTagResourceVisitor
   public static final List<String> RESOURCES_WITH_TAGS = List.of("ServiceRequest", "Patient", "Observation", "ClinicalImpression");
   public static final String TOKEN_ATTR_FHIR_ORG_ID = "fhir_organization_id";
   public static final String USER_ALL_TAGS = "*";
+  public static final String LDM_TAG_PREFIX = "LDM";
   
   private final BioProperties bioProperties;
-  
-  public MetaTagResourceAccess(BioProperties bioProperties) {
-    this.bioProperties = bioProperties;
-  }
 
   public boolean canSeeResource(RequestDetails requestDetails, IBaseResource resource) {
     // POST can be a bundle or graphql query
@@ -47,10 +47,21 @@ public class MetaTagResourceAccess {
   private boolean canAccessResource(RequestDetails requestDetails, IBaseResource resource) {
     if (bioProperties.isTaggingEnabled() && isResourceWithTags(resource)) {
       final List<String> userTags = getUserTags(requestDetails);
-      final List<String> resourceTags = resource.getMeta().getSecurity().stream().map(IBaseCoding::getCode).collect(Collectors.toList());
-      return userTags.contains(USER_ALL_TAGS) || resourceTags.stream().anyMatch(userTags::contains);
+      final List<String> resourceTags = getResourceTags(resource);
+      if (userTags.contains(USER_ALL_TAGS)) {
+        return true;  // can see all
+      } else if (resource instanceof ServiceRequest) {
+        return resourceTags.stream().anyMatch(userTags::contains) || // EP ...
+            userTags.stream().anyMatch(t -> t.startsWith(LDM_TAG_PREFIX)); // ... any LDM can see all
+      } else {
+        return true; // every other tagged resources are visible
+      }
     }
     return true;
+  }
+  
+  public List<String> getResourceTags(IBaseResource resource) {
+    return resource.getMeta().getSecurity().stream().map(IBaseCoding::getCode).collect(Collectors.toList());
   }
 
   public List<String> getUserTags(RequestDetails requestDetails) {

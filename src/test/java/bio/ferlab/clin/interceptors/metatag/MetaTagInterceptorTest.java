@@ -50,6 +50,21 @@ class MetaTagInterceptorTest {
   }
 
   @Test
+  void addTagParameter_GET_valid_resource_LDM() {
+    final RequestDetails requestDetails = Mockito.mock(RequestDetails.class);
+    when(requestDetails.getRequestType()).thenReturn(RequestTypeEnum.GET);
+    when(requestDetails.getResourceName()).thenReturn("ValidResource");
+    when(metaTagResourceAccess.isResourceWithTags(any(String.class))).thenReturn(true);
+    when(metaTagResourceAccess.getUserTags(any())).thenReturn(List.of("tag1", "tag2", "LDM-X"));
+    metaTagInterceptor.addTagParameter(requestDetails);
+    verify(bioProperties).isTaggingEnabled();
+    verify(bioProperties).isTaggingQueryParam();
+    verify(metaTagResourceAccess).isResourceWithTags(eq("ValidResource"));
+    verify(metaTagResourceAccess).getUserTags(eq(requestDetails));
+    verify(requestDetails, never()).addParameter(any(), any());
+  }
+
+  @Test
   void addTagParameter_ignore_if_all_tags() {
     final RequestDetails requestDetails = Mockito.mock(RequestDetails.class);
     when(requestDetails.getRequestType()).thenReturn(RequestTypeEnum.GET);

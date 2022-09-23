@@ -15,6 +15,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 
+import static bio.ferlab.clin.interceptors.metatag.MetaTagResourceAccess.LDM_TAG_PREFIX;
 import static bio.ferlab.clin.interceptors.metatag.MetaTagResourceAccess.USER_ALL_TAGS;
 
 @Component
@@ -48,7 +49,8 @@ public class MetaTagInterceptor {
         && RequestTypeEnum.GET.equals(requestDetails.getRequestType()) 
         && metaTagResourceAccess.isResourceWithTags(requestDetails.getResourceName())) {
       final List<String> userTags =  metaTagResourceAccess.getUserTags(requestDetails);
-      if(!userTags.isEmpty() && !userTags.contains(USER_ALL_TAGS)) {
+      // ignore filter if no tags or system or LDM (because not all resources have LDM tags, so we want to see them)
+      if(!userTags.isEmpty() && !userTags.contains(USER_ALL_TAGS) && userTags.stream().noneMatch(t -> t.startsWith(LDM_TAG_PREFIX))) {
         // we use "," separated query param _security because it's a OR relation, at least one should match.
         final String orTags = String.join(",", userTags);
         requestDetails.addParameter("_security", new String[]{orTags});
