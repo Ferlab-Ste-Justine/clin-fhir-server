@@ -48,13 +48,10 @@ public class MetaTagResourceAccess {
     if (bioProperties.isTaggingEnabled() && isResourceWithTags(resource)) {
       final List<String> userTags = getUserTags(requestDetails);
       final List<String> resourceTags = getResourceTags(resource);
-      if (userTags.contains(USER_ALL_TAGS)) {
+      if (userTags.contains(USER_ALL_TAGS) || userTags.stream().anyMatch(t -> t.startsWith(LDM_TAG_PREFIX))) {
         return true;  // can see all
-      } else if (resource instanceof ServiceRequest) {
-        return resourceTags.stream().anyMatch(userTags::contains) || // EP ...
-            userTags.stream().anyMatch(t -> t.startsWith(LDM_TAG_PREFIX)); // ... any LDM can see all
       } else {
-        return true; // every other tagged resources are visible
+        return resourceTags.stream().anyMatch(userTags::contains);  // tagged by EP
       }
     }
     return true;

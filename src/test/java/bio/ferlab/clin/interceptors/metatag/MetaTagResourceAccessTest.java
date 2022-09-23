@@ -85,7 +85,7 @@ class MetaTagResourceAccessTest {
         .withClaim(TOKEN_ATTR_FHIR_ORG_ID, List.of("tag1", "tag2"))
         .sign(Algorithm.HMAC256("secret"));
     when(requestDetails.getHeader("Authorization")).thenReturn("Bearer "+ bearer);
-    final ServiceRequest resource = new ServiceRequest();
+    final Patient resource = new Patient();
     resource.getMeta().addSecurity().setCode("tag3"); // not allowed to see this resource
     assertFalse(metaTagResourceAccess.canSeeResource(requestDetails, resource));
     resource.getMeta().addSecurity().setCode("tag1"); // allowed to see this resource
@@ -115,16 +115,6 @@ class MetaTagResourceAccessTest {
     final ServiceRequest resource = new ServiceRequest();
     resource.getMeta().addSecurity().setCode("anyTag"); // allowed because LDM can see all of them
     assertTrue(metaTagResourceAccess.canSeeResource(requestDetails, resource));
-  }
-  
-  @Test
-  void canAccessResource_all_but_service_request() {
-    final RequestDetails requestDetails = Mockito.mock(RequestDetails.class);
-    when(requestDetails.getRequestType()).thenReturn(RequestTypeEnum.GET);
-    String bearer = JWT.create()
-        .withClaim(TOKEN_ATTR_FHIR_ORG_ID, List.of("foo"))
-        .sign(Algorithm.HMAC256("secret"));
-    when(requestDetails.getHeader("Authorization")).thenReturn("Bearer "+ bearer);
     assertTrue(metaTagResourceAccess.canSeeResource(requestDetails, new Patient()));
     assertTrue(metaTagResourceAccess.canSeeResource(requestDetails, new Observation()));
     assertTrue(metaTagResourceAccess.canSeeResource(requestDetails, new ClinicalImpression()));
