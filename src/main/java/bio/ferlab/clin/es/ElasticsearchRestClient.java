@@ -20,6 +20,9 @@ import java.util.*;
 public class ElasticsearchRestClient {
     private static final Logger log = LoggerFactory.getLogger(ElasticsearchRestClient.class);
     public static final String FAILED_TO_GET_ALIASES = "Failed to get aliases";
+    public static final String FAILED_TO_BLOCK_INDEX_WRITE = "Failed to block index write";
+    public static final String FAILED_TO_CLONE_INDEX = "Failed to clone index";
+    public static final String FAILED_TO_GET_INDEX_MAPPING = "Failed to get index mapping";
     public static final String FAILED_TO_DELETE_INDEX = "Failed to delete index";
     public static final String FAILED_TO_SET_ALIAS = "Failed to set alias";
     public static final String FAILED_TO_SAVE_RESOURCE = "Failed to save resource";
@@ -45,6 +48,21 @@ public class ElasticsearchRestClient {
         return aliases;
     }
 
+    public void bocksIndexWrite(String index) {
+        log.info("Block index write: {}", index);
+        try {
+
+            final Request request = new Request(
+              HttpMethod.PUT.name(), String.format("/%s/_settings", index)
+            );
+            request.setJsonEntity("{\"settings\": {\"index.blocks.write\": true}}");
+            this.data.client.performRequest(request);
+        } catch (IOException e) {
+            log.error(e.getLocalizedMessage());
+            throw new ca.uhn.fhir.rest.server.exceptions.InternalErrorException(FAILED_TO_BLOCK_INDEX_WRITE);
+        }
+    }
+
     public void setAlias(List<String> add, List<String> remove, String alias) {
         log.info("Set alias: {} add: {} remove: {}", alias, add, remove);
         try {
@@ -61,6 +79,41 @@ public class ElasticsearchRestClient {
         } catch (IOException e) {
             log.error(e.getLocalizedMessage());
             throw new ca.uhn.fhir.rest.server.exceptions.InternalErrorException(FAILED_TO_SET_ALIAS);
+        }
+    }
+
+    public String mapping(String index, boolean ignoreIfMissing) {
+        log.info(String.format("Get index mapping [%s]", index));
+        try {
+            final Request request = new Request(
+              HttpMethod.GET.name(),
+              String.format("/%s/_mapping", index)
+            );
+            final Response response = this.data.client.performRequest(request);
+            return EntityUtils.toString(response.getEntity());
+        } catch (ResponseException e) {
+            if (e.getResponse().getStatusLine().getStatusCode() == 404 && ignoreIfMissing) {
+                return null;
+            }
+            log.error(e.getLocalizedMessage());
+            throw new ca.uhn.fhir.rest.server.exceptions.InternalErrorException(FAILED_TO_DELETE_RESOURCE);
+        } catch (IOException e) {
+            log.error(e.getLocalizedMessage());
+            throw new ca.uhn.fhir.rest.server.exceptions.InternalErrorException(FAILED_TO_GET_INDEX_MAPPING);
+        }
+    }
+
+    public void clone(String srcIndex, String dstIndex ) {
+        log.info(String.format("Clone index [%s] into [%s]", srcIndex, dstIndex));
+        try {
+            final Request request = new Request(
+              HttpMethod.POST.name(),
+              String.format("/%s/_clone/%s", srcIndex, dstIndex)
+            );
+            this.data.client.performRequest(request);
+        } catch (IOException e) {
+            log.error(e.getLocalizedMessage());
+            throw new ca.uhn.fhir.rest.server.exceptions.InternalErrorException(FAILED_TO_CLONE_INDEX);
         }
     }
 

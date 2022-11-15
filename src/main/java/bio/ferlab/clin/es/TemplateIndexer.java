@@ -2,6 +2,10 @@ package bio.ferlab.clin.es;
 
 import bio.ferlab.clin.es.indexer.NanuqIndexer;
 import bio.ferlab.clin.properties.BioProperties;
+import bio.ferlab.clin.utils.MD5Utils;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -41,9 +45,9 @@ public class TemplateIndexer {
     final String templateName = FilenameUtils.getBaseName(path);
     final String templateContent = loadTemplate(path);
     esClient.indexTemplate(templateName, templateContent);
-    return DigestUtils.md5Hex(templateContent);
+    return MD5Utils.fromTemplate(templateContent);
   }
-  
+
   private String loadTemplate(String path) {
     try(InputStream is = getClass().getClassLoader().getResourceAsStream(path)) {
       return IOUtils.toString(is, StandardCharsets.UTF_8.name());

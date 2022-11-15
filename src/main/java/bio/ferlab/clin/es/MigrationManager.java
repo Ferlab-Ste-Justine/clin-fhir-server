@@ -3,6 +3,7 @@ package bio.ferlab.clin.es;
 import bio.ferlab.clin.es.config.ResourceDaoConfiguration;
 import bio.ferlab.clin.es.indexer.NanuqIndexer;
 import bio.ferlab.clin.properties.BioProperties;
+import bio.ferlab.clin.utils.MD5Utils;
 import ca.uhn.fhir.jpa.searchparam.SearchParameterMap;
 import ca.uhn.fhir.rest.api.server.IBundleProvider;
 import lombok.RequiredArgsConstructor;
@@ -34,46 +35,39 @@ public class MigrationManager {
   public void startMigration() {
     // always index templates
     Map<String, String> templates = this.templateIndexer.indexTemplates();
-    Map<String, String> aliases = esClient.aliases();
 
-    // indexes that will be used as aliases at the end of the process
+    // indexes that will be used at the end of the process
     final String analysesIndex = bioProperties.getNanuqEsAnalysesIndex();
     final String sequencingsIndex = bioProperties.getNanuqEsSequencingsIndex();
 
-    // indexes with templates hash from this release of FHIR
+    // current ES mappings MD5 hashes
+    final String currentESAnalysesMappingHash = Optional.ofNullable(this.esClient.mapping(analysesIndex, true))
+      .map(m -> MD5Utils.fromESIndexMapping(analysesIndex, m, true)).orElse(null);
+    final String currentESsequencingsMappingHash = Optional.ofNullable(this.esClient.mapping(sequencingsIndex, true))
+      .map(m -> MD5Utils.fromESIndexMapping(sequencingsIndex, m, true)).orElse(null);
+
+    // temporary indexes with templates hash
     final String analysesIndexWithHash = formatIndexWithHash(analysesIndex, templates.get(ANALYSES_TEMPLATE));
     final String sequencingIndexWithHash = formatIndexWithHash(sequencingsIndex, templates.get(SEQUENCINGS_TEMPLATE));
 
-    // indexes with templates hash known by elastic-search
-    final String currentESAnalysesIndexWithHash = aliases.get(analysesIndex);
-    final String currentESSequencingIndexWithHash = aliases.get(sequencingsIndex);
-
-    // compare current template hash with ES
-    final boolean analysesHasChanged = !analysesIndexWithHash.equals(currentESAnalysesIndexWithHash);
-    final boolean sequencingsHasChanged = !sequencingIndexWithHash.equals(currentESSequencingIndexWithHash);
+    // compare template with current ES hashes
+    final boolean analysesHasChanged = !templates.get(ANALYSES_TEMPLATE).equals(currentESAnalysesMappingHash);
+    final boolean sequencingsHasChanged = !templates.get(SEQUENCINGS_TEMPLATE).equals(currentESsequencingsMappingHash);
 
     // Perform migration if any of them is different
     if (analysesHasChanged || sequencingsHasChanged) {
       log.info("Migrate: {} {}", analysesIndexWithHash, sequencingIndexWithHash);
+
+      // insure the temporary indexes don't exist already
+      this.cleanup(List.of(analysesIndexWithHash, sequencingIndexWithHash));
+      // index the data into the temporary indexes with hashes
       this.migrate(analysesIndexWithHash, sequencingIndexWithHash);
 
-      // always remove indexes that could have the names of the aliases to publish
-      this.cleanup(List.of(analysesIndex, sequencingsIndex));
-
-      // remove + add the aliases referring the new indexes + hash
-      List<String> indexesToCleanup = new ArrayList<>();
-      if (analysesHasChanged) {
-        this.publish(analysesIndexWithHash, currentESAnalysesIndexWithHash, analysesIndex);
-        indexesToCleanup.add(currentESAnalysesIndexWithHash);
-      }
-
-      if (sequencingsHasChanged) {
-        this.publish(sequencingIndexWithHash, currentESSequencingIndexWithHash, sequencingsIndex);
-        indexesToCleanup.add(currentESSequencingIndexWithHash);
-      }
-
-      // cleanup previous indexes
-      this.cleanup(indexesToCleanup);
+      // rolling the index with hashes into official indexes
+      this.rolling(analysesIndexWithHash, analysesIndex);
+      this.rolling(sequencingIndexWithHash, sequencingsIndex);
+      // remove temporary indexes with hashes
+      this.cleanup(List.of(analysesIndexWithHash, sequencingIndexWithHash));
     } else {
       log.info("Nothing to migrate");
     }
@@ -109,11 +103,14 @@ public class MigrationManager {
     }
   }
 
-  private void publish(String indexWithHash, String currentESIndexWithHash, String index) {
-    List<String> aliasesToRemove = new ArrayList<>();
-    log.info("Publish: {} <=> {}", index, indexWithHash);
-    Optional.ofNullable(currentESIndexWithHash).ifPresent(aliasesToRemove::add);
-    this.esClient.setAlias(List.of(indexWithHash), aliasesToRemove, index);
+  private void rolling(String indexWithHash, String index) {
+    log.info("Rolling: {} => {}", indexWithHash, index);
+    this.cleanup(List.of(index));
+    final String alias = this.esClient.aliases().get(index);
+    if (alias != null)
+      this.esClient.setAlias(List.of(), List.of(alias), index);
+    this.esClient.bocksIndexWrite(indexWithHash);
+    this.esClient.clone(indexWithHash, index);
   }
 
   private String formatIndexWithHash(String index, String templateHash) {
