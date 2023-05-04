@@ -23,7 +23,7 @@
     <properties>
         <java.version>11</java.version>
         <kotlin.version>1.4.32</kotlin.version>
-        <keycloak.version>17.0.1</keycloak.version>
+        <keycloak.version>20.0.0</keycloak.version>
         <log4j2.version>2.15.0</log4j2.version>
     </properties>
 
