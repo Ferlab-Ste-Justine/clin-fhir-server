@@ -6,6 +6,7 @@ import bio.ferlab.clin.properties.BioProperties;
 import ca.uhn.fhir.jpa.searchparam.SearchParameterMap;
 import ca.uhn.fhir.rest.api.server.IBundleProvider;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -103,7 +104,16 @@ public class MigrationManager {
     }
   }
 
+  private void createEmptyIndexes(List<String> indexes) {
+    indexes.stream()
+      .filter(Objects::nonNull)
+      .filter(StringUtils::isNotBlank)
+      .forEach(this.esClient::createIndex);
+  }
+
   private void migrate(String analysesIndex, String sequencingIndex) {
+    // always create empty indexes in case nothing to index
+    this.createEmptyIndexes(List.of(analysesIndex, sequencingIndex));
     int batchSize = 100, offset = 0;
     boolean running = true;
     int total = 0;

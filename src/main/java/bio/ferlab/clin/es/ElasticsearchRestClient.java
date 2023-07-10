@@ -19,6 +19,7 @@ import java.util.*;
 @RequiredArgsConstructor
 public class ElasticsearchRestClient {
     private static final Logger log = LoggerFactory.getLogger(ElasticsearchRestClient.class);
+    public static final String FAILED_TO_CREATE_INDEX = "Failed to create index";
     public static final String FAILED_TO_GET_ALIASES = "Failed to get aliases";
     public static final String FAILED_TO_DELETE_INDEX = "Failed to delete index";
     public static final String FAILED_TO_SET_ALIAS = "Failed to set alias";
@@ -27,6 +28,23 @@ public class ElasticsearchRestClient {
     public static final String FAILED_TO_DELETE_RESOURCE = "Failed to delete resource";
     private final ElasticsearchData data;
     private final JsonGenerator jsonGenerator;
+
+    public void createIndex(String index) {
+        log.info("Create index: {}", index);
+        try {
+            final Request request = new Request(
+              HttpMethod.PUT.name(), String.format("/%s", index)
+            );
+            this.data.client.performRequest(request);
+        } catch (IOException e) {
+            if (e instanceof  ResponseException && e.getMessage().contains("resource_already_exists_exception")) {
+                log.warn("Index already exists: {}", index);
+            } else {
+                log.error(e.getLocalizedMessage());
+                throw new ca.uhn.fhir.rest.server.exceptions.InternalErrorException(FAILED_TO_CREATE_INDEX);
+            }
+        }
+    }
 
     public Map<String, String> aliases() {
         log.info("Get aliases");

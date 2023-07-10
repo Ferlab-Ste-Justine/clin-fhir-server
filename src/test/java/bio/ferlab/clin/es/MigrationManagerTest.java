@@ -60,6 +60,8 @@ class MigrationManagerTest {
     migrationManager.startMigration();
 
     verify(esClient).delete(eq(List.of("analyses", "sequencings", "analyses-HASH2")));
+    verify(esClient).createIndex(eq("analyses"));
+    verify(esClient).createIndex(eq("sequencings"));
     verify(esClient, never()).setAlias(eq(List.of()), eq(List.of("*")), eq("sequencings"));
     verify(esClient).setAlias(eq(List.of()), eq(List.of("*")), eq("analyses"));
     verify(nanuqIndexer).doIndex(eq(null), eq(Set.of("sr1", "sr2")), eq("analyses"), eq("sequencings"), eq(false));
@@ -93,6 +95,8 @@ class MigrationManagerTest {
     migrationManager.startMigration();
 
     verify(nanuqIndexer).doIndex(eq(null), eq(Set.of("sr1", "sr2")), eq("analyses-HASH2"), eq("sequencings-HASH1"), eq(false));
+    verify(esClient).createIndex(eq("analyses-HASH2"));
+    verify(esClient).createIndex(eq("sequencings-HASH1"));
     verify(esClient).setAlias(eq(List.of("analyses-HASH2")), eq(List.of("*")), eq("analyses"));
     verify(esClient).setAlias(eq(List.of("sequencings-HASH1")), eq(List.of()), eq("sequencings"));
     verify(esClient).delete(eq(List.of("analyses", "sequencings")));
@@ -116,6 +120,8 @@ class MigrationManagerTest {
     migrationManager.startMigration();
 
     verify(nanuqIndexer).doIndex(eq(null), eq(Set.of("sr1", "sr2")), eq("analyses-HASH2"), eq("sequencings-HASH1"), eq(false));
+    verify(esClient).createIndex(eq("analyses-HASH2"));
+    verify(esClient).createIndex(eq("sequencings-HASH1"));
     verify(esClient).setAlias(eq(List.of("analyses-HASH2")), eq(List.of("*")), eq("analyses"));
     verify(esClient, never()).setAlias(any(), any(), eq("sequencings"));
     verify(esClient).delete(eq(List.of("analyses", "sequencings")));
@@ -139,6 +145,8 @@ class MigrationManagerTest {
     migrationManager.startMigration();
 
     verify(nanuqIndexer).doIndex(eq(null), eq(Set.of("sr1", "sr2")), eq("analyses-HASH2"), eq("sequencings-HASH2"), eq(false));
+    verify(esClient).createIndex(eq("analyses-HASH2"));
+    verify(esClient).createIndex(eq("sequencings-HASH2"));
     verify(esClient).setAlias(eq(List.of("analyses-HASH2")), eq(List.of("*")), eq("analyses"));
     verify(esClient).setAlias(eq(List.of("sequencings-HASH2")), eq(List.of("*")), eq("sequencings"));
     verify(esClient).delete(eq(List.of("analyses", "sequencings")));
