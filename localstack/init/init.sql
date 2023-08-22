@@ -1645,6 +1645,18 @@ INSERT INTO public.associated_policy (policy_id, associated_policy_id) VALUES ('
 INSERT INTO public.associated_policy (policy_id, associated_policy_id) VALUES ('fbc29587-fcba-4b81-b8f4-4c36313aeab7', 'f9b6ce0f-635b-4ba0-961b-39f98ba3fb6b');
 INSERT INTO public.associated_policy (policy_id, associated_policy_id) VALUES ('fbc29587-fcba-4b81-b8f4-4c36313aeab7', 'de9e7111-fc7c-4e3c-9462-40c25d524f94');
 INSERT INTO public.associated_policy (policy_id, associated_policy_id) VALUES ('fbc29587-fcba-4b81-b8f4-4c36313aeab7', '5ed10474-21bf-40e9-bbb3-f80eab73baaa');
+INSERT INTO public.associated_policy (policy_id, associated_policy_id) VALUES ('67007f3b-7afc-4e4a-99c3-7953f2b5977a', 'f9b6ce0f-635b-4ba0-961b-39f98ba3fb6b');
+INSERT INTO public.associated_policy (policy_id, associated_policy_id) VALUES ('67007f3b-7afc-4e4a-99c3-7953f2b5977a', 'de9e7111-fc7c-4e3c-9462-40c25d524f94');
+INSERT INTO public.associated_policy (policy_id, associated_policy_id) VALUES ('e6115285-34ec-4fa2-a088-3003ab8ba657', 'f9b6ce0f-635b-4ba0-961b-39f98ba3fb6b');
+INSERT INTO public.associated_policy (policy_id, associated_policy_id) VALUES ('e6115285-34ec-4fa2-a088-3003ab8ba657', 'de9e7111-fc7c-4e3c-9462-40c25d524f94');
+INSERT INTO public.associated_policy (policy_id, associated_policy_id) VALUES ('fb9c26ce-060c-4dc5-a7b8-45ac7b6bfa4f', 'f9b6ce0f-635b-4ba0-961b-39f98ba3fb6b');
+INSERT INTO public.associated_policy (policy_id, associated_policy_id) VALUES ('fb9c26ce-060c-4dc5-a7b8-45ac7b6bfa4f', 'de9e7111-fc7c-4e3c-9462-40c25d524f94');
+INSERT INTO public.associated_policy (policy_id, associated_policy_id) VALUES ('19bcdfb7-989c-4daf-a9ca-6b5e8951b97b', 'f9b6ce0f-635b-4ba0-961b-39f98ba3fb6b');
+INSERT INTO public.associated_policy (policy_id, associated_policy_id) VALUES ('19bcdfb7-989c-4daf-a9ca-6b5e8951b97b', 'de9e7111-fc7c-4e3c-9462-40c25d524f94');
+INSERT INTO public.associated_policy (policy_id, associated_policy_id) VALUES ('5cf293bc-e1a9-479a-b503-561e0fa99fc6', 'f9b6ce0f-635b-4ba0-961b-39f98ba3fb6b');
+INSERT INTO public.associated_policy (policy_id, associated_policy_id) VALUES ('5cf293bc-e1a9-479a-b503-561e0fa99fc6', 'de9e7111-fc7c-4e3c-9462-40c25d524f94');
+INSERT INTO public.associated_policy (policy_id, associated_policy_id) VALUES ('9391162c-e6ba-48fd-99bd-31c1ef627695', 'f9b6ce0f-635b-4ba0-961b-39f98ba3fb6b');
+INSERT INTO public.associated_policy (policy_id, associated_policy_id) VALUES ('9391162c-e6ba-48fd-99bd-31c1ef627695', 'de9e7111-fc7c-4e3c-9462-40c25d524f94');
 
 
 --
